@@ -1,0 +1,24 @@
+{
+  "responses": [
+    {
+      "message": "test",
+      "response": "Test received.",
+      "action": "send"
+    },
+    {
+      "message": "reply",
+      "response": "Test but replying to you.",
+      "action": "reply"
+    },
+    {
+      "message": "desiree sucks",
+      "response": "Yes, I agree.",
+      "action": "send"
+    },
+    {
+      "message": "qian sucks",
+      "response": "Please do not insult my creator.",
+      "action": "reply"
+    }
+  ]
+}

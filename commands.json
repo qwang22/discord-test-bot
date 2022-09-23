@@ -2,16 +2,9 @@
   "commands": [
     {
       "name": "ping",
-      "description": "Replies with Pong!"
+      "description": "Replies with Pong!",
+      "response": "Pong!",
+      "action": "reply"
     }
-  ],
-  "messages": [
-    {
-      "message": "test",
-      "value": "Test received"
-    }
-  ],
-  "replies_dict": {
-
-  }
+  ]
 }

@@ -1,10 +1,12 @@
 const { Client, GatewayIntentBits, REST, Routes } = require('discord.js');
 const dotenv = require('dotenv');
-const dict = require('./commands.json');
+const commandsData = require('./commands.json');
+const responsesData = require('./responses.json');
 
 class Main {
 
   client;
+  indicator = ""; // indicator to notify the bot of a command
 
   up() {
     this.init();
@@ -30,31 +32,55 @@ class Main {
       if (message.author.bot) return;
     
       console.log(`User ${message.author.username} said ${message.content}`);
-      switch(message?.content) {
-        case 'test':
-          message.channel.send('Test received! :)');
+
+      const responsesArr = responsesData.responses;
+      const response = responsesArr.find(x => x.message === message.content);
+
+      if (!response) {
+        console.log(`Response not found for message: ${message.content}`);
+        return;
+      }
+
+      switch(response.action) {
+        case 'send':
+          message.channel.send(response.response);
           break;
         case 'reply':
-          message.reply('Replying to your message');
+          message.reply(response.response);
           break;
-        case 'desiree sucks':
-          message.channel.send('Yes, I agree, but Connor sucks more.');
+        default:
+          console.log(`Action ${response.action} not found`);
+          message.reply('I did not understand :)');
           break;
       }
     });
     
-    this.client.on('interactionCreate', async interaction => {
+    this.client.on('interactionCreate', async (interaction) => {
       if (!interaction.isChatInputCommand()) return;
-    
-      if (interaction.commandName === 'ping') {
-        await interaction.reply('Pong!');
+
+      const commandsArr = commandsData.commands;
+      const command = commandsArr.find(x => x.name === interaction.commandName);
+
+      if (!command) {
+        console.log(`Command name ${interaction.commandName} not found`);
+        return;
+      }
+
+      switch(command.action) {
+        case 'reply':
+          await interaction.reply(command.response);
+          break;
+        default:
+          console.log(`Action ${response.action} not found`);
+          await interaction.reply('I did not understand :(');
+          break;
       }
     });
   }
 
   refreshAppCommands = async () => {
     const rest = new REST({ version: process.env.REST_VERSION }).setToken(process.env.TOKEN);
-    const commands = dict.commands;
+    const commands = commandsData.commands;
   
     try {
       console.log('Started refreshing application (/) commands.');
