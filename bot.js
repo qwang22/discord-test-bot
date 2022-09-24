@@ -1,31 +1,34 @@
 const { Client, GatewayIntentBits, REST, Routes } = require('discord.js');
 const dotenv = require('dotenv');
-const commandsData = require('./commands.json');
-const responsesData = require('./responses.json');
+const commandsData = require('./assets/data/commands.json');
+const responsesData = require('./assets/data/responses.json');
 
 class Main {
 
   client;
   indicator = ""; // indicator to notify the bot of a command
+  members = [];
 
-  up() {
+  up = () => {
     this.init();
     this.refreshAppCommands();
     this.login();
   }
 
-  init() {
+  init = () => {
     // config env variables
     dotenv.config();
 
     this.client = new Client({
-      intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages,
+      intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildMembers,
         GatewayIntentBits.MessageContent, GatewayIntentBits.DirectMessages],
       partials: ['CHANNEL']
     });
     
-    this.client.on('ready', () => {
+    this.client.on('ready', async () => {
       console.log(`Logged in as ${this.client.user.tag}!`);
+      //console.log(await this.client.guilds.fetch());
+      this.getMembers(process.env.SERVER1_ID); // TODO - update this
     });
     
     this.client.on('messageCreate', async (message) => {
@@ -70,6 +73,13 @@ class Main {
         case 'reply':
           await interaction.reply(command.response);
           break;
+        case 'where':
+        
+          interaction.reply("<@" + interaction.user.id + ">");
+          // TODO - send local image file
+          // const embed = new Discord.MessageEmbed().setTitle('Attachment').setImage('attachment://image.png');
+          // channel.send({ embeds: [embed], files: ['./image.png'] });
+          break;
         default:
           console.log(`Action ${response.action} not found`);
           await interaction.reply('I did not understand :(');
@@ -93,8 +103,18 @@ class Main {
     }
   }
 
-  login = () => {
-    this.client.login(process.env.TOKEN);
+  login = async () => {
+    await this.client.login(process.env.TOKEN);
+  }
+
+  getMembers = async (guildId) => {
+    const guild = await this.client.guilds.fetch(guildId);
+    const members = await guild.members.fetch();
+    for (const member of members) {
+      if (!member[1].user.bot) {
+        this.members.push(member[1].user);
+      }
+    }
   }
 }
 

@@ -5,6 +5,11 @@
       "description": "Replies with Pong!",
       "response": "Pong!",
       "action": "reply"
+    },
+    {
+      "name": "where_me",
+      "description": "Where me....",
+      "action": "where"
     }
   ]
 }
