@@ -27,8 +27,10 @@ class Main {
     
     this.client.on('ready', async () => {
       console.log(`Logged in as ${this.client.user.tag}!`);
+      // temp logging to see data
       //console.log(await this.client.guilds.fetch());
-      this.getMembers(process.env.SERVER1_ID); // TODO - update this
+      //this.getMembers(process.env.SERVER1_ID);
+      //this.getChannels(process.env.SERVER1_ID)
     });
     
     this.client.on('messageCreate', async (message) => {
@@ -74,17 +76,29 @@ class Main {
           await interaction.reply(command.response);
           break;
         case 'where':
-        
-          interaction.reply("<@" + interaction.user.id + ">");
-          // TODO - send local image file
-          // const embed = new Discord.MessageEmbed().setTitle('Attachment').setImage('attachment://image.png');
-          // channel.send({ embeds: [embed], files: ['./image.png'] });
+          const target = command.name?.split('_')[1];
+          let imagePath = '';
+          // TODO - replace w/ target & userId values from dictionary
+          if (target === 'alvin') {
+            interaction.reply(`<@551534587378008065>`);
+            imagePath = './assets/images/where_alvin.png';
+          } else if (target === 'poop') {
+            imagePath = './assets/images/where_poop.png';
+          }
+
+          if (imagePath) {
+            const channel = await this.getChannel(interaction.channelId);
+            await channel.send({ files: [imagePath]});
+          }
+          
           break;
         default:
           console.log(`Action ${response.action} not found`);
           await interaction.reply('I did not understand :(');
           break;
       }
+
+      return;
     });
   }
 
@@ -115,6 +129,21 @@ class Main {
         this.members.push(member[1].user);
       }
     }
+  }
+
+  getChannels = async (guildId) => {
+    const guild = await this.client.guilds.fetch(guildId);
+    const channels = await guild.channels.fetch();
+    const channelsList = [];
+    for (const channel of channels) {
+      channelsList.push({ id: channel[1].id, name: channel[1].name })
+    }
+    return channelsList;
+  }
+
+  getChannel = async (channelId) => {
+    const guild = await this.client.guilds.fetch(process.env.SERVER2_ID);
+    return guild.channels.fetch(channelId);
   }
 }
 

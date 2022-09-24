@@ -10,6 +10,16 @@
       "name": "where_me",
       "description": "Where me....",
       "action": "where"
+    },
+    {
+      "name": "where_alvin",
+      "description": "Where Alvin...",
+      "action": "where"
+    },
+    {
+      "name": "where_poop",
+      "description": "Poop",
+      "action": "where"
     }
   ]
 }

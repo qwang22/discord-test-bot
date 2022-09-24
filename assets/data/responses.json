@@ -16,6 +16,11 @@
       "action": "send"
     },
     {
+      "message": "connor sucks",
+      "response": "Ugh, he is the WORST.",
+      "action": "send"
+    },
+    {
       "message": "qian sucks",
       "response": "Please do not insult my creator.",
       "action": "reply"
