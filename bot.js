@@ -104,7 +104,6 @@ class Main {
   }
 
   handleTextCommand = async (message, commandText, args) => {
-    console.log('handletextcommand', commandText, args);
     const commandsArr = textCommandsList.commands;
     const command = commandsArr.find(c => c.name.toLowerCase() === commandText.toLowerCase());
 
@@ -203,7 +202,7 @@ class Main {
     return message.channel.send(`Randomly chosen game: ${game}`);
   }
 
-  secretSanta = async (_message, args) => {
+  secretSanta = async (message, args) => {
     const ssHelper = new SecretSantaHelper(args);
     const results = ssHelper.assignSecretSantas();
     
@@ -213,7 +212,7 @@ class Main {
       santa.send(`You are ${recipient.username}'s secret santa!`);
     }
 
-    return;
+    return message.channel.send('Done! Check your DMs for your result :)');
   }
 
 }
