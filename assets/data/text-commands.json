@@ -1,0 +1,23 @@
+{
+  "commands": [
+    {
+      "name": "makeTeams",
+      "type": "function",
+      "callback": "makeTeams"
+    },
+    {
+      "name": "pickGame",
+      "type": "function",
+      "callback": "pickGame"
+    },
+    {
+      "name": "secretSanta",
+      "type": "function",
+      "callback": "secretSanta"
+    },
+    {
+      "name": "where",
+      "type": "where"
+    }
+  ]
+}

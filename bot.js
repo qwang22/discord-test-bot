@@ -1,12 +1,16 @@
-const { Client, GatewayIntentBits, REST, Routes } = require('discord.js');
+const { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder } = require('discord.js');
 const dotenv = require('dotenv');
-const commandsData = require('./assets/data/commands.json');
-const responsesData = require('./assets/data/responses.json');
+const commandsList = require('./assets/data/commands.json');
+const textCommandsList = require('./assets/data/text-commands.json')
+const responsesList = require('./assets/data/responses.json');
+const { GamePicker } = require('./helpers/game-picker');
+const { SecretSantaHelper } = require('./helpers/secret-santa');
+const { TeamGenerator } = require('./helpers/team-generator');
 
 class Main {
 
   client;
-  indicator = ""; // indicator to notify the bot of a command
+  prefix = "!caca"; // indicator to notify the bot of a command
   members = [];
 
   up = () => {
@@ -35,76 +39,29 @@ class Main {
     
     this.client.on('messageCreate', async (message) => {
       if (message.author.bot) return;
-    
-      console.log(`User ${message.author.username} said ${message.content}`);
 
-      const responsesArr = responsesData.responses;
-      const response = responsesArr.find(x => x.message === message.content);
+      if (!message.content.startsWith(this.prefix)) {
+        return this.handleResponse(message);
+      } else {
+        const content = message.content.toLowerCase().slice(this.prefix.length).trim().replace(/\s\s+/g, ' ');
+  
+        const command = content.split(' ')[0];
+        const args = content.split(' ')?.slice(1).map(arg => { return arg });
 
-      if (!response) {
-        console.log(`Response not found for message: ${message.content}`);
-        return;
-      }
-
-      switch(response.action) {
-        case 'send':
-          message.channel.send(response.response);
-          break;
-        case 'reply':
-          message.reply(response.response);
-          break;
-        default:
-          console.log(`Action ${response.action} not found`);
-          message.reply('I did not understand :)');
-          break;
+        return this.handleTextCommand(message, command, args);
       }
     });
     
     this.client.on('interactionCreate', async (interaction) => {
       if (!interaction.isChatInputCommand()) return;
 
-      const commandsArr = commandsData.commands;
-      const command = commandsArr.find(x => x.name === interaction.commandName);
-
-      if (!command) {
-        console.log(`Command name ${interaction.commandName} not found`);
-        return;
-      }
-
-      switch(command.action) {
-        case 'reply':
-          await interaction.reply(command.response);
-          break;
-        case 'where':
-          const target = command.name?.split('_')[1];
-          let imagePath = '';
-          // TODO - replace w/ target & userId values from dictionary
-          if (target === 'alvin') {
-            interaction.reply(`<@551534587378008065>`);
-            imagePath = './assets/images/where_alvin.png';
-          } else if (target === 'poop') {
-            imagePath = './assets/images/where_poop.png';
-          }
-
-          if (imagePath) {
-            const channel = await this.getChannel(interaction.channelId);
-            await channel.send({ files: [imagePath]});
-          }
-          
-          break;
-        default:
-          console.log(`Action ${response.action} not found`);
-          await interaction.reply('I did not understand :(');
-          break;
-      }
-
-      return;
+      return this.handleSlashCommand(interaction);
     });
   }
 
   refreshAppCommands = async () => {
     const rest = new REST({ version: process.env.REST_VERSION }).setToken(process.env.TOKEN);
-    const commands = commandsData.commands;
+    const commands = commandsList.commands;
   
     try {
       console.log('Started refreshing application (/) commands.');
@@ -119,6 +76,88 @@ class Main {
 
   login = async () => {
     await this.client.login(process.env.TOKEN);
+  }
+
+  handleResponse = (message) => {
+    console.log(`User ${message.author.username} said ${message.content}`);
+
+    const responsesArr = responsesList.responses;
+    const response = responsesArr.find(x => x.message.toLowerCase() === message.content.toLowerCase());
+
+    if (!response) {
+      console.log(`Response not found for message: ${message.content}`);
+      return;
+    }
+
+    switch(response.action) {
+      case 'send':
+        message.channel.send(response.response);
+        break;
+      case 'reply':
+        message.reply(response.response);
+        break;
+      default:
+        console.log(`Action ${response.action} not found`);
+        message.reply('I did not understand :)');
+        break;
+    }
+  }
+
+  handleTextCommand = async (message, commandText, args) => {
+    console.log('handletextcommand', commandText, args);
+    const commandsArr = textCommandsList.commands;
+    const command = commandsArr.find(c => c.name.toLowerCase() === commandText.toLowerCase());
+
+    if (!command) {
+      console.log(`Command ${commandText} not found`);
+      return;
+    }
+
+    if (command.type === 'function') {
+      return this[`${command.callback}`](message, args);
+    }
+
+    return;
+  }
+
+  handleSlashCommand = async (interaction) => {
+    const commandsArr = commandsList.commands;
+    const command = commandsArr.find(x => x.name === interaction.commandName);
+
+    if (!command) {
+      console.log(`Command name ${interaction.commandName} not found`);
+      return;
+    }
+
+    switch(command.action) {
+      case 'reply':
+        await interaction.reply(command.response);
+        break;
+      case 'where':
+        return interaction.reply('/where commands are currently under construction and are non-functional');
+        const target = command.name?.split('_')[1];
+        let imagePath = '';
+        // TODO - replace w/ target & userId values from dictionary
+        if (target === 'alvin') {
+          interaction.reply(`<@userId>`);
+          imagePath = './assets/images/where_alvin.png';
+        } else if (target === 'poop') {
+          imagePath = './assets/images/where_poop.png';
+        }
+
+        if (imagePath) {
+          const channel = await this.getChannel(interaction.channelId);
+          await channel.send({ files: [imagePath]});
+        }
+          
+        break;
+      default:
+        console.log(`Action ${response.action} not found`);
+        await interaction.reply('I did not understand :(');
+        break;
+    }
+
+    return;
   }
 
   getMembers = async (guildId) => {
@@ -145,6 +184,38 @@ class Main {
     const guild = await this.client.guilds.fetch(process.env.SERVER2_ID);
     return guild.channels.fetch(channelId);
   }
+
+  makeTeams = (message, args) => {
+    const teamGenerator = new TeamGenerator();
+    const teams = teamGenerator.generateTeams(args, 2);
+
+    const responseArr = teams.map(t => {
+      return `${t.name}: ${t.players.join(', ')}`;
+    });
+
+    return message.channel.send(responseArr.join('\n'));
+  }
+
+  pickGame = (message, args) => {
+    const gamePicker = new GamePicker(args);
+    const game = gamePicker.pickGame();
+
+    return message.channel.send(`Randomly chosen game: ${game}`);
+  }
+
+  secretSanta = async (_message, args) => {
+    const ssHelper = new SecretSantaHelper(args);
+    const results = ssHelper.assignSecretSantas();
+    
+    for (const r of results) {
+      const santa = await this.client.users.fetch(r.santa.substring(2, r.santa.length-1));
+      const recipient = await this.client.users.fetch(r.recipient.substring(2, r.recipient.length-1));
+      santa.send(`You are ${recipient.username}'s secret santa!`);
+    }
+
+    return;
+  }
+
 }
 
 const main = new Main();
