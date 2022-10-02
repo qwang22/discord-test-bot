@@ -8,4 +8,4 @@ A test bot created for discord with some useful features such as:
 1. Follow the Discord developer instructions to create a bot and add it to your server.
 2. Clone this repo
 3. Run `npm install`
-4. Run `node bot.js`
+4. Run `npm start`
