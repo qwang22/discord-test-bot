@@ -1,30 +1,17 @@
-import { REST, Routes } from "discord.js";
+import { REST, RESTPostAPIApplicationCommandsJSONBody, Routes, SlashCommandBuilder, Snowflake } from "discord.js";
 import path from 'path';
 import fs from 'fs';
+import { ISlashCommand } from "./models/ISlashCommand";
 
-// TODO - fix all instances of any
 class RESTHelper {
-  refreshAppCommands = async (guildId?) => {
-    // const rest = new REST({ version: process.env.REST_VERSION }).setToken(process.env.TOKEN);
-    // const commands = commandsList.commands;
-  
-    // try {
-    //   console.log('Started refreshing application (/) commands.');
-  
-    //   await rest.put(Routes.applicationCommands(process.env.CLIENT_ID), { body: commands });
-  
-    //   console.log('Successfully reloaded application (/) commands.');
-    // } catch (error) {
-    //   console.error(error);
-    // }
-
-    const commands: any[] = [];
+  refreshAppCommands = async (guildId?: Snowflake) => {
+    const commands: RESTPostAPIApplicationCommandsJSONBody[] = [];
     const commandsPath = path.join(__dirname, 'commands');
     const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.ts'));
 
     for (const file of commandFiles) {
 	    const filePath = path.join(commandsPath, file);
-	    const command = require(filePath) as any;
+	    const command: ISlashCommand = require(filePath);
 	    commands.push(command.data.toJSON());
     }
 
@@ -38,7 +25,7 @@ class RESTHelper {
         .then(() => console.log('Successfully registered application commands.'))
         .catch(console.error);
       } else {
-          await rest.put(Routes.applicationCommands(process.env.CLIENT_ID as string), { body: commands });
+        await rest.put(Routes.applicationCommands(process.env.CLIENT_ID as string), { body: commands });
       }
       
       console.log('Successfully reloaded application (/) commands.');

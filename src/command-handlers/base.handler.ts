@@ -1,5 +1,6 @@
-class BaseHelper {
-  shuffle = (array) => {
+class BaseHandler {
+
+  shuffle = (array: any[]): any[] => {
     let currentIndex = array.length,  randomIndex;
   
     // While there remain elements to shuffle...
@@ -17,9 +18,10 @@ class BaseHelper {
     return array;
   }
 
-  getRandomNumber(min, max) { // range inclusive
+  // range inclusive
+  getRandomNumber = (min: number, max: number): number => {
     return Math.floor(Math.random() * (max - min + 1) + min);
   }
 }
 
-module.exports = { BaseHelper }
+export { BaseHandler }

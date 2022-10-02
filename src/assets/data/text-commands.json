@@ -6,9 +6,9 @@
       "callback": "makeTeams"
     },
     {
-      "name": "pickGame",
+      "name": "pick",
       "type": "function",
-      "callback": "pickGame"
+      "callback": "pick"
     },
     {
       "name": "secretSanta",

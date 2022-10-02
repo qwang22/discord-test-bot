@@ -1,11 +1,11 @@
-import { SlashCommandBuilder } from 'discord.js';
+import { CommandInteraction, InteractionResponse, SlashCommandBuilder } from 'discord.js';
 
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('beep')
 		.setDescription('Beep!'),
 
-	async execute(interaction) {
+	execute: async (interaction: CommandInteraction): Promise<InteractionResponse<boolean>> => {
 		return interaction.reply('Boop!');
 	}
 };
