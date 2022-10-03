@@ -98,7 +98,6 @@ class Bot {
     const response = this.responsesList.find(x => x.message.toLowerCase() === message.content.toLowerCase());
 
     if (!response) {
-      console.log(`Response not found for message: ${message.content}`);
       return;
     }
 
