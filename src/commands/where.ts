@@ -8,7 +8,15 @@ module.exports = {
 		.setDescription('Where...')
 		.addStringOption(option =>
 			option.setName('user')
-				.setDescription('The user to where.')
+        .setDescription('The user to where.')
+        .addChoices(
+          { name: 'alvin', value: 'alvin' },
+          { name: 'desiree', value: 'desiree' },
+          { name: 'qian', value: 'qian' },
+          { name: 'blake', value: 'blake' },
+          { name: 'blaze', value: 'blaze' },
+          { name: 'poop', value: 'poop' }
+        )
 				.setRequired(true)),
 	
 	execute: async (interaction): Promise<InteractionResponse<boolean>>  => {
