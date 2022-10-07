@@ -31,7 +31,7 @@ class Bot {
   init = () => {
     this.client = new Discord.Client({
       intents: [Discord.GatewayIntentBits.Guilds, Discord.GatewayIntentBits.GuildMessages, Discord.GatewayIntentBits.GuildMembers,
-        Discord.GatewayIntentBits.MessageContent, Discord.GatewayIntentBits.DirectMessages],
+        Discord.GatewayIntentBits.MessageContent, Discord.GatewayIntentBits.DirectMessages, Discord.GatewayIntentBits.GuildVoiceStates],
       partials: [Discord.Partials.Channel]
     });
 
@@ -50,7 +50,12 @@ class Bot {
         const content: string = message.content.toLowerCase().slice(this.prefix.length).trim().replace(/\s\s+/g, ' ');
   
         const command = content.split(' ')[0];
-        const args: string[] = content.split(' ')?.slice(1).map(arg => { return arg });
+        let args: string[] = content.split(' ')?.slice(1).map(arg => { return arg });
+        if (command === 'play') {
+          // lowercased links don't work
+          const trueContent: string = message.content.slice(this.prefix.length).trim().replace(/\s\s+/g, ' ');
+          args = trueContent.split(' ')?.slice(1).map(arg => { return arg });
+        }
 
         return this.handleTextCommand(message, command, args);
       }

@@ -18,6 +18,11 @@
     {
       "name": "where",
       "type": "where"
+    },
+    {
+      "name": "play",
+      "type": "function",
+      "callback": "playAudio"
     }
   ]
 }

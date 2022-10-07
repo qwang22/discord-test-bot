@@ -1,4 +1,5 @@
 import * as Discord from 'discord.js';
+import { AudioHandler } from './command-handlers/audio.handler';
 import { PickerHandler } from "./command-handlers/picker.handler";
 import { SecretSantaHandler } from "./command-handlers/secret-santa.handler";
 import { TeamGeneratorHandler } from "./command-handlers/team-generator.handler";
@@ -8,11 +9,13 @@ class CommandDispatcher {
   pickerHandler: PickerHandler;
   secretSantaHandler: SecretSantaHandler;
   teamGeneratorHandler: TeamGeneratorHandler;
+  audioHandler: AudioHandler;
 
   constructor() {
     this.pickerHandler = new PickerHandler();
     this.secretSantaHandler = new SecretSantaHandler();
     this.teamGeneratorHandler = new TeamGeneratorHandler();
+    this.audioHandler = new AudioHandler();
   }
 
   makeTeams = (message: Discord.Message, args: string[]): Promise<Discord.Message<boolean>> => {
@@ -44,6 +47,11 @@ class CommandDispatcher {
     }
 
     return message.channel.send('Done! Check your DMs for your result :)');
+  }
+
+  playAudio = async (message: Discord.Message, args: string[]) => {
+    this.audioHandler.connect(message);
+    this.audioHandler.play(args[0]);
   }
 }
 
