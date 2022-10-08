@@ -52,6 +52,8 @@ class CommandDispatcher {
   playAudio = async (message: Discord.Message, args: string[]) => {
     this.audioHandler.connect(message);
     this.audioHandler.play(args[0]);
+
+    return message.channel.send(`Now playing ${args[0]}`)
   }
 }
 

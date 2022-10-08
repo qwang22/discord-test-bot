@@ -7,16 +7,19 @@ import {
   createAudioPlayer,
   createAudioResource,
   joinVoiceChannel,
-  AudioPlayer
+  AudioPlayer,
 } from '@discordjs/voice';
 import { BaseHandler } from './base.handler';
 
 class AudioHandler extends BaseHandler {
   connection: VoiceConnection;
   player: AudioPlayer;
+  state: AudioPlayerStatus;
+  queue: string[];
 
   constructor() {
     super();
+    this.queue = [];
   }
 
   connect = (message: Message) => {
@@ -33,29 +36,42 @@ class AudioHandler extends BaseHandler {
 
     try {
       const stream = ytdl(link, {
-        filter: 'audioonly'
+        filter: "audioonly",
+        highWaterMark: 1 << 62,
+        liveBuffer: 1 << 62,
+        dlChunkSize: 0,
+        quality: "lowestaudio",
       });
   
       const resource = createAudioResource(stream, {
         inputType: StreamType.Arbitrary
       });
   
-      this.player = createAudioPlayer();
+      if (!this.player) {
+        this.player = createAudioPlayer();
+      }
   
       this.player.play(resource);
   
       this.connection.subscribe(this.player);
+
+      this.player.on(AudioPlayerStatus.Idle, (_oldState, _newState) => {
+        setTimeout(() => {
+          if (this.state === AudioPlayerStatus.Idle && this.connection) {
+            this.connection.destroy();
+          }
+        }, 60000);
+      });
+  
+      this.player.on('stateChange', (oldState, newState) => {
+        console.log(`Audio player transitioned from ${oldState.status} to ${newState.status}`);
+        
+        this.state = newState.status;
+      });
+
     } catch(err) {
       console.error(`Error during audio playback`, err);
     }
-
-    this.player.on(AudioPlayerStatus.Idle, () => {
-      this.connection.destroy();
-    });
-
-    this.player.on('stateChange', (oldState, newState) => {
-      console.log(`Audio player transitioned from ${oldState.status} to ${newState.status}`);
-    });
 
   }
 
