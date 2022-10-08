@@ -6,15 +6,21 @@ import {
   StreamType,
   createAudioPlayer,
   createAudioResource,
-  joinVoiceChannel
+  joinVoiceChannel,
+  AudioPlayer
 } from '@discordjs/voice';
 import { BaseHandler } from './base.handler';
 
 class AudioHandler extends BaseHandler {
   connection: VoiceConnection;
+  player: AudioPlayer;
+
+  constructor() {
+    super();
+  }
 
   connect = (message: Message) => {
-    if (!message.member?.voice) return message.reply("You're not in a voice channel");
+    if (!message.member?.voice?.channelId) return message.reply("You're not in a voice channel!");
 
     this.connection = joinVoiceChannel({
       channelId: message.member.voice.channelId as string,
@@ -24,21 +30,31 @@ class AudioHandler extends BaseHandler {
   }
 
   play = (link: string) => {
-    const stream = ytdl(link, {
-      filter: 'audioonly'
-    });
 
-    const resource = createAudioResource(stream, {
-      inputType: StreamType.Arbitrary
-    });
+    try {
+      const stream = ytdl(link, {
+        filter: 'audioonly'
+      });
+  
+      const resource = createAudioResource(stream, {
+        inputType: StreamType.Arbitrary
+      });
+  
+      this.player = createAudioPlayer();
+  
+      this.player.play(resource);
+  
+      this.connection.subscribe(this.player);
+    } catch(err) {
+      console.error(`Error during audio playback`, err);
+    }
 
-    const player = createAudioPlayer();
-
-    player.play(resource);
-    this.connection.subscribe(player);
-
-    player.on(AudioPlayerStatus.Idle, () => {
+    this.player.on(AudioPlayerStatus.Idle, () => {
       this.connection.destroy();
+    });
+
+    this.player.on('stateChange', (oldState, newState) => {
+      console.log(`Audio player transitioned from ${oldState.status} to ${newState.status}`);
     });
 
   }
