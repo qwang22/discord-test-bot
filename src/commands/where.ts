@@ -15,6 +15,7 @@ module.exports = {
           { name: 'qian', value: 'qian' },
           { name: 'blake', value: 'blake' },
           { name: 'blaze', value: 'blaze' },
+          { name: 'connor', value: 'connor' },
           { name: 'poop', value: 'poop' }
         )
 				.setRequired(true)),
