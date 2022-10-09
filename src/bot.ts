@@ -5,7 +5,6 @@ import { RESTHelper } from './rest.helper';
 import { CommandDispatcher } from './command.dispatcher';
 import { ITextCommand, ITextCommandList } from './models/ITextCommand';
 import { IMessageResponse, IMessageResponseList } from './models/IMessageResponse';
-
 const textCommandsList: ITextCommandList = require('./assets/data/text-commands.json');
 const responsesList: IMessageResponseList = require('./assets/data/message-responses.json');
 
@@ -47,15 +46,10 @@ class Bot {
       if (!message.content.startsWith(this.prefix)) {
         return this.handleResponse(message);
       } else {
-        const content: string = message.content.toLowerCase().slice(this.prefix.length).trim().replace(/\s\s+/g, ' ');
+        const content: string = message.content.slice(this.prefix.length).trim().replace(/\s\s+/g, ' ');
   
-        const command = content.split(' ')[0];
+        const command = content.split(' ')[0].toLowerCase();
         let args: string[] = content.split(' ')?.slice(1).map(arg => { return arg });
-        if (command === 'play') {
-          // lowercased links don't work
-          const trueContent: string = message.content.slice(this.prefix.length).trim().replace(/\s\s+/g, ' ');
-          args = trueContent.split(' ')?.slice(1).map(arg => { return arg });
-        }
 
         return this.handleTextCommand(message, command, args);
       }
