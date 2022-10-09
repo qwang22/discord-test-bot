@@ -51,9 +51,15 @@ class CommandDispatcher {
 
   playAudio = async (message: Discord.Message, args: string[]) => {
     this.audioHandler.connect(message);
-    this.audioHandler.play(args[0]);
+    const position = this.audioHandler.play(args[0]);
 
-    return message.channel.send(`Now playing ${args[0]}`)
+    const embed = new Discord.EmbedBuilder()
+          .setColor(0x0099FF)
+          .setTitle(position === 0 ? 'Now Playing' : 'Queued')
+          .setDescription(args[0])
+          .setFooter({ text: position === 0 ? `Requested by <user_coming_soon>` : `In position #${position}` });
+
+    return message.channel.send({ embeds: [embed] });
   }
 }
 

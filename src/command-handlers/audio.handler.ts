@@ -69,13 +69,12 @@ class AudioHandler extends BaseHandler {
 
   }
 
-  play = (link: string) => {
+  play = (link: string): number => {
+
+    this.queue = [...this.queue, link];
+    const next = this.queue[0];
 
     try {
-      this.queue = [...this.queue, link];
-
-      const next = this.queue[0];
-
       const resource = this.createResource(next);
   
       if (this.state !== AudioPlayerStatus.Playing) {
@@ -85,6 +84,8 @@ class AudioHandler extends BaseHandler {
     } catch(err) {
       console.error(`Error during audio playback`, err);
     }
+
+    return this.queue.indexOf(link);
 
   }
 
