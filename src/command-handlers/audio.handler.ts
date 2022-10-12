@@ -1,5 +1,5 @@
 import ytdl from 'ytdl-core';
-import { Message } from 'discord.js';
+import { Message, Snowflake, User } from 'discord.js';
 import {
   AudioPlayerStatus,
   VoiceConnection,
@@ -18,10 +18,15 @@ class AudioHandler extends BaseHandler {
   player: AudioPlayer;
   state: AudioPlayerStatus;
   queue: string[];
+  queue2: { link: string, message: Message }[];
+
+  _events: any;
 
   constructor() {
     super();
     this.queue = [];
+    this.queue2 = [];
+    this._events = {};
   }
 
   connect = (message: Message) => {
@@ -41,16 +46,22 @@ class AudioHandler extends BaseHandler {
     }
 
     this.player = createAudioPlayer();
+    console.log('creating audio player...')
 
     this.connection.subscribe(this.player);
 
     this.player.on(AudioPlayerStatus.Idle, (_oldState, _newState) => {
       this.queue.shift();
+      this.queue2.shift();
 
       console.log('Current queue', this.queue);
   
       if (this.queue.length) {
         this.player.play(this.createResource(this.queue[0]));
+      }
+
+      if (this.queue2.length) {
+        this.player.play(this.createResource(this.queue2[0].link));
       }
   
       setTimeout(() => {
@@ -59,6 +70,11 @@ class AudioHandler extends BaseHandler {
           this.connection.destroy();
         }
       }, 60000);
+    });
+
+    this.player.on(AudioPlayerStatus.Playing, () => {
+      // send now playing message
+      this.emit('playing', this.queue2[0]);
     });
   
     this.player.on('stateChange', (oldState, newState) => {
@@ -69,24 +85,24 @@ class AudioHandler extends BaseHandler {
 
   }
 
-  play = (link: string): number => {
+  play = (link: string, message: Message): number => {
 
     this.queue = [...this.queue, link];
-    const next = this.queue[0];
+    this.queue2 = [...this.queue2, { link, message }];
+
+    if (this.state && this.state !== AudioPlayerStatus.Playing) return -1;
 
     try {
+      // const next = this.queue[0];
+      const next = this.queue2[0].link;
       const resource = this.createResource(next);
-  
-      if (this.state !== AudioPlayerStatus.Playing) {
-        this.player.play(resource);
-      }
-
+      this.player.play(resource);
     } catch(err) {
       console.error(`Error during audio playback`, err);
+      return -1;
     }
 
     return this.queue.indexOf(link);
-
   }
 
   createResource = (link: string): AudioResource => {
@@ -101,6 +117,38 @@ class AudioHandler extends BaseHandler {
     return createAudioResource(stream, {
       inputType: StreamType.Arbitrary
     });
+  }
+
+  /***** testing event emitter ******/
+
+  on(name, listener) {
+    if (!this._events[name]) {
+      this._events[name] = [];
+    }
+
+    this._events[name].push(listener);
+  }
+
+  removeListener(name, listenerToRemove) {
+    if (!this._events[name]) {
+      throw new Error(`Can't remove a listener. Event "${name}" doesn't exits.`);
+    }
+
+    const filterListeners = (listener) => listener !== listenerToRemove;
+
+    this._events[name] = this._events[name].filter(filterListeners);
+  }
+
+  emit(name, data) {
+    if (!this._events[name]) {
+      throw new Error(`Can't emit an event. Event "${name}" doesn't exits.`);
+    }
+
+    const fireCallbacks = (callback) => {
+      callback(data);
+    };
+
+    this._events[name].forEach(fireCallbacks);
   }
 
 }

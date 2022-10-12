@@ -11,6 +11,8 @@ class CommandDispatcher {
   teamGeneratorHandler: TeamGeneratorHandler;
   audioHandler: AudioHandler;
 
+  eventsAttached: boolean;
+
   constructor() {
     this.pickerHandler = new PickerHandler();
     this.secretSantaHandler = new SecretSantaHandler();
@@ -50,16 +52,41 @@ class CommandDispatcher {
   }
 
   playAudio = async (message: Discord.Message, args: string[]) => {
+    if (!this.eventsAttached) this.attachEvents();
+  
     this.audioHandler.connect(message);
-    const position = this.audioHandler.play(args[0]);
+    const position = this.audioHandler.play(args[0], message);
 
-    const embed = new Discord.EmbedBuilder()
+    if (position > 0 && message.embeds?.length) {
+      const embed = new Discord.EmbedBuilder()
+        .setColor(0x0099FF)
+        .setTitle( 'Queued')
+        .setURL(args[0])
+        .setDescription(message.embeds[0].title)
+        .setThumbnail(message.embeds[0].thumbnail!.url)
+        .setFooter({ text: `In position #${position}` });
+
+      return message.channel.send({ embeds: [embed] });
+    } else return;
+
+  }
+
+  attachEvents = () => {
+    this.eventsAttached = true;
+    this.audioHandler.on('playing', (data) => {
+      console.log('playing event fired', data.link);
+
+      const message = data.message;
+      const embed = new Discord.EmbedBuilder()
           .setColor(0x0099FF)
-          .setTitle(position === 0 ? 'Now Playing' : 'Queued')
-          .setDescription(args[0])
-          .setFooter({ text: position === 0 ? `Requested by <user_coming_soon>` : `In position #${position}` });
+          .setTitle('Now Playing')
+          .setURL(data.link)
+          .setDescription(message.embeds[0].title)
+          .setThumbnail(message.embeds[0].thumbnail!.url)
+          .setFooter({ text: `Requested by <@${message.author.id}>` });
 
     return message.channel.send({ embeds: [embed] });
+    });
   }
 }
 
