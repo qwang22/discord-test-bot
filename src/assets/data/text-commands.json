@@ -16,13 +16,14 @@
       "callback": "secretSanta"
     },
     {
-      "name": "where",
-      "type": "where"
-    },
-    {
       "name": "play",
       "type": "function",
       "callback": "playAudio"
+    },
+    {
+      "name": "playlist",
+      "type": "function",
+      "callback": "showPlaylist"
     }
   ]
 }

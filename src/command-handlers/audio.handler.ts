@@ -17,15 +17,13 @@ class AudioHandler extends BaseHandler {
   connection: VoiceConnection;
   player: AudioPlayer;
   state: AudioPlayerStatus;
-  queue: string[];
-  queue2: { link: string, message: Message }[];
+  queue: { link: string, message: Message, title: string }[];
 
   _events: any;
 
   constructor() {
     super();
     this.queue = [];
-    this.queue2 = [];
     this._events = {};
   }
 
@@ -52,16 +50,9 @@ class AudioHandler extends BaseHandler {
 
     this.player.on(AudioPlayerStatus.Idle, (_oldState, _newState) => {
       this.queue.shift();
-      this.queue2.shift();
-
-      console.log('Current queue', this.queue);
   
       if (this.queue.length) {
-        this.player.play(this.createResource(this.queue[0]));
-      }
-
-      if (this.queue2.length) {
-        this.player.play(this.createResource(this.queue2[0].link));
+        this.player.play(this.createResource(this.queue[0].link));
       }
   
       setTimeout(() => {
@@ -74,7 +65,7 @@ class AudioHandler extends BaseHandler {
 
     this.player.on(AudioPlayerStatus.Playing, () => {
       // send now playing message
-      this.emit('playing', this.queue2[0]);
+      this.emit('playing', this.queue[0]);
     });
   
     this.player.on('stateChange', (oldState, newState) => {
@@ -87,14 +78,18 @@ class AudioHandler extends BaseHandler {
 
   play = (link: string, message: Message): number => {
 
-    this.queue = [...this.queue, link];
-    this.queue2 = [...this.queue2, { link, message }];
+    this.queue = [
+      ...this.queue,
+      { link, message, title: message.embeds[0]?.title ?? `I\'m still learning and couldn\'t get the title this time, but this was the URL: ${link}` }];
 
-    if (this.state && this.state !== AudioPlayerStatus.Playing) return -1;
+    if (!message.embeds[0]) {
+      console.log(`EMBED ISSUE: ${message}`)
+    }
+    if (this.state && this.state === AudioPlayerStatus.Playing) return this.queue.length-1;
 
     try {
       // const next = this.queue[0];
-      const next = this.queue2[0].link;
+      const next = this.queue[0].link;
       const resource = this.createResource(next);
       this.player.play(resource);
     } catch(err) {
@@ -102,7 +97,7 @@ class AudioHandler extends BaseHandler {
       return -1;
     }
 
-    return this.queue.indexOf(link);
+    return this.queue.findIndex(x => x.link === link);
   }
 
   createResource = (link: string): AudioResource => {

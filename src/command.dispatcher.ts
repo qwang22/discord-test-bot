@@ -60,7 +60,7 @@ class CommandDispatcher {
     if (position > 0 && message.embeds?.length) {
       const embed = new Discord.EmbedBuilder()
         .setColor(0x0099FF)
-        .setTitle( 'Queued')
+        .setTitle('Queued')
         .setURL(args[0])
         .setDescription(message.embeds[0].title)
         .setThumbnail(message.embeds[0].thumbnail!.url)
@@ -69,6 +69,26 @@ class CommandDispatcher {
       return message.channel.send({ embeds: [embed] });
     } else return;
 
+  }
+
+  showPlaylist = (message: Discord.Message) => {
+    const list = this.audioHandler.queue.map((song, i) => {
+      return {
+        song: song.title,
+        position: i.toString(),
+        requestedBy: song.message.author.tag
+      }
+    });
+
+    let response = `Current playlist:\n\nPlaying now: ${list[0].song} (requested by ${list[0].requestedBy}).\n\n`;
+    list.shift();
+
+    if (list.length) response += 'Upcoming:\n\n';
+
+    list.forEach(item => {
+      response += `${item.position}. ${item.song} requested by ${item.requestedBy}.\n`;
+    });
+    return message.channel.send(response);
   }
 
   attachEvents = () => {
@@ -83,7 +103,7 @@ class CommandDispatcher {
           .setURL(data.link)
           .setDescription(message.embeds[0].title)
           .setThumbnail(message.embeds[0].thumbnail!.url)
-          .setFooter({ text: `Requested by <@${message.author.id}>` });
+          .setFooter({ text: `Requested by ${message.author.tag}` });
 
     return message.channel.send({ embeds: [embed] });
     });

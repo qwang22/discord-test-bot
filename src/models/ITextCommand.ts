@@ -1,4 +1,4 @@
-type CommandType = 'function' | 'where';
+type CommandType = 'function' | 'music';
 
 interface ITextCommand {
   name: string;
